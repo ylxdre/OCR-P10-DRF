@@ -2,8 +2,22 @@ from django.db import models
 
 
 class Project(models.Model):
-    author = 
-    contributor = 
+
+    class Type(models.TextChoices):
+        BACKEND = 'BackEnd'
+        FRONTEND = 'FrontEnd'
+        IOS = 'iOS'
+        ANDROID = 'Android'
+
+
+    title = models.CharField(length=255)
+    date_created = models.DateTimeField(auto_now_add=True)
+    type = models.CharField(choices=Type.choices, max_length=10)
+    description = models.CharField(length=4000)
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.DO_NOTHING)
+    
+    contributors = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, through='ProjectContributor', related_name='contributor')
 
 
 class Issue(models.Model):
@@ -33,19 +47,19 @@ class Issue(models.Model):
     priority = models.CharField(Priority.choices, max_lenght=15)
     tag = models.CharField(Tag.choices, max_length=15)
 
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.DO_NOTHING)
+
     contributors = models.ManyToManyField(
             settings.AUTH_USER_MODEL, through='IssueContributors', related_name='contributors')
-    assigned_to =  
 
 
 class Comment(models.Model):
-    
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=SET
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=DO_NOTHING)
     issue = models.ForeignKey(Issue, on_delete=models.CASCADE)
 
 
+class ProjectContributors(models.Model):
+    contributor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.DO_NOTHING)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    data = models.CharField(max_length=255, blank=True)
 
-
-class IssueContributors(models.Model):
-    contributor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL)
-    issue = "ToDo"
