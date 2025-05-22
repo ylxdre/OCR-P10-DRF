@@ -55,8 +55,8 @@ python manage.py runserver
 ```
 ## Use  
 
-URL is :  http://127.0.0.1:8000
-Endpoints and methods to come soon
+URL is :  http://127.0.0.1:8000  
+Endpoints and methods are coming soon
 
 
 ## Author
