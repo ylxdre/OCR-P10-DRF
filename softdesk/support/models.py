@@ -50,7 +50,7 @@ class Issue(models.Model):
     title = models.CharField(max_length=255, verbose_name='title')
     date_created = models.DateTimeField(auto_now_add=True)
     description = models.TextField()
-    project = models.ForeignKey(Project, null=True, on_delete=models.SET_NULL, blank=True)
+    project = models.ForeignKey(Project, null=True, on_delete=models.CASCADE, blank=True)
     status = models.CharField(Status.choices, max_length=15)
     priority = models.CharField(Priority.choices, max_length=15)
     tag = models.CharField(Tag.choices, max_length=15)
