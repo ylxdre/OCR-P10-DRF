@@ -26,7 +26,7 @@ class Project(models.Model):
 
 
 class Contributor(models.Model):
-    contributor = models.ForeignKey(settings.AUTH_USER_MODEL,
+    user = models.ForeignKey(settings.AUTH_USER_MODEL,
                                     on_delete=models.DO_NOTHING)
     project = models.ForeignKey('Project',
                                 on_delete=models.CASCADE,

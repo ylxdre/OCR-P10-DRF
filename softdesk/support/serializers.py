@@ -9,3 +9,9 @@ class ProjectSerializer(ModelSerializer):
         fields = ['title', 'date_created', 'type', 'description', 'author',
                   'contributors']
 
+
+class ContributorSerialier(ModelSerializer):
+
+    class Meta:
+        model = Contributor
+        Fields = ['']
