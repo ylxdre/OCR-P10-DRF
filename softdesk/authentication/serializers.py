@@ -8,7 +8,12 @@ class UserSerializer(ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'age', 'can_be_contacted', 'can_data_be_shared']
+        fields = ['id',
+                  'username',
+                  'email',
+                  'age',
+                  'can_be_contacted',
+                  'can_data_be_shared']
 
 
 class UserUpdateSerializer(ModelSerializer):
@@ -18,15 +23,19 @@ class UserUpdateSerializer(ModelSerializer):
         fields = ['email', 'can_be_contacted', 'can_data_be_shared']
 
 
-
 class UserRegisterSerializer(ModelSerializer):
-    password2 = serializers.CharField(style={'input-type': 'password'}, write_only=True)
+    password2 = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password', 'password2', 'age', 'can_be_contacted', 'can_data_be_shared']
-        extra_kwargs = {'password': {'write_only': True}}
-
+        fields = ['username',
+                  'email',
+                  'password',
+                  'password2',
+                  'age',
+                  'can_be_contacted',
+                  'can_data_be_shared']
 
     def validate(self, data):
         if data['password'] != data['password2']:

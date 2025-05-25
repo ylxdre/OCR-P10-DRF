@@ -30,6 +30,10 @@ class UserCreateView(APIView):
         #return Response("prout", status=status.HTTP_226_IM_USED)
 
     def post(self, request):
+        """
+        User subscription
+        Args:
+        """
         serializer = UserRegisterSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
@@ -37,8 +41,10 @@ class UserCreateView(APIView):
                 "message": "User created successfully",
                 "data": serializer.data
             }
-            return Response(data=response, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(data=response,
+                            status=status.HTTP_201_CREATED)
+        return Response(serializer.errors,
+                        status=status.HTTP_400_BAD_REQUEST)
 
 
 class PasswordUpdateView(APIView):
@@ -49,12 +55,15 @@ class PasswordUpdateView(APIView):
         serializer = PasswordUpdateSerializer(data=request.data)
         if serializer.is_valid():
             if not user.check_password(serializer.data.get("old_password")):
-                return Response({"old_password":"Wrong password"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"old_password":"Wrong password"},
+                                status=status.HTTP_400_BAD_REQUEST)
             user.set_password(serializer.data.get('new_password'))
             user.save()
             update_session_auth_hash(request, user)
-            return Response(serializer.errors, status=status.HTTP_204_NO_CONTENT)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors,
+                            status=status.HTTP_204_NO_CONTENT)
+        return Response(serializer.errors,
+                        status=status.HTTP_400_BAD_REQUEST)
 
 class UserView(APIView):
     permission_classes = [IsAuthenticated]
@@ -64,24 +73,29 @@ class UserView(APIView):
 
     def put(self, request):
         user = request.user
+        print("coucou", request.data['user'])
         serializer = UserUpdateSerializer(user, data=request.data)
         print(serializer.initial_data)
         if serializer.is_valid():
             serializer.save()
-            return Response("Data updated", status=status.HTTP_201_CREATED)
-        return Response("Error", status=status.HTTP_400_BAD_REQUEST)
+            return Response("Data updated",
+                            status=status.HTTP_201_CREATED)
+        return Response("Error",
+                        status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request):
         user = request.user
         username = request.user.username
-        user.delete()
-        return Response(f"User {username} deleted.", status=status.HTTP_204_NO_CONTENT)
+        if 'user' in request.data:
+            if username == request.data['user']:
+                user.delete()
+                return Response(f"User {username} deleted.",
+                                status=status.HTTP_204_NO_CONTENT)
+            return Response("Token's owner and user provided don't match",
+                            status=status.HTTP_400_BAD_REQUEST)
+        return Response("Username to delete must be given in data",
+                        status=status.HTTP_400_BAD_REQUEST)
 
 
-class UserRegistrationViewSet(ModelViewSet):
-    #serializer_class = UserRegistrationSerializer
-
-    def get_queryset(self):
-        return User.objects.get(self.request.user)
 
 
