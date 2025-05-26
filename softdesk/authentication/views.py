@@ -22,12 +22,8 @@ class UserCreateView(APIView):
     #TODELETE : for testing purpose
     def get(self, request, *args, **kwargs):
         user = User.objects.all()
-        print(request.user)
         serializer = UserSerializer(user, many=True)
-        print(serializer.data)
-        #if serializer.is_valid():
         return Response(serializer.data)
-        #return Response("prout", status=status.HTTP_226_IM_USED)
 
     def post(self, request):
         """
@@ -73,7 +69,6 @@ class UserView(APIView):
 
     def put(self, request):
         user = request.user
-        print("coucou", request.data['user'])
         serializer = UserUpdateSerializer(user, data=request.data)
         print(serializer.initial_data)
         if serializer.is_valid():

@@ -1,6 +1,5 @@
 from rest_framework.serializers import ModelSerializer, SerializerMethodField, ValidationError
 from rest_framework import serializers
-from support.models import Project, Issue, Comment, Contributor
 from authentication.models import User
 
 
