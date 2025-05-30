@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from authentication.views import (UserView, UserCreateView, PasswordUpdateView)
-from support.views import ProjectViewSet
+from support.views import ProjectViewSet, IssueViewSet, CommentViewSet, ContributorViewSet
 from rest_framework import routers
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
@@ -25,6 +25,9 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 router = routers.SimpleRouter()
 #router.register('user', UserViewSet, basename='user')
 router.register('project', ProjectViewSet, basename='project')
+router.register('issue', IssueViewSet, basename='issue')
+router.register('comment', CommentViewSet, basename='comment')
+router.register('contributors', ContributorViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),

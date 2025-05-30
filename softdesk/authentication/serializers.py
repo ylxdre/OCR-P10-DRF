@@ -1,4 +1,4 @@
-from rest_framework.serializers import ModelSerializer, SerializerMethodField, ValidationError
+from rest_framework.serializers import ModelSerializer, ValidationError
 from rest_framework import serializers
 from authentication.models import User
 
@@ -50,7 +50,6 @@ class UserRegisterSerializer(ModelSerializer):
         """
         Create and return a new `User` instance, given the validated data.
         """
-        #if self.validate(validated_data):
         user = User.objects.create_user(
                 username=validated_data['username'],
                 email=validated_data['email'],

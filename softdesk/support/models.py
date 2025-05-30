@@ -45,14 +45,14 @@ class ProjectContributor(models.Model):
 class Issue(models.Model):
 
     class Priority(models.TextChoices):
-        LOW = 'L'
-        MEDIUM = 'M'
-        HIGH = 'H'
+        LOW = 'Low'
+        MEDIUM = 'Medium'
+        HIGH = 'High'
     
 
     class Status(models.TextChoices):
         TODO = 'ToDo'
-        INPROGRESS = 'InProgress'
+        INPROGRESS = 'In Progress'
         FINISHED = 'Finished'
 
 
@@ -65,13 +65,11 @@ class Issue(models.Model):
     title = models.CharField(max_length=255, verbose_name='title')
     date_created = models.DateTimeField(auto_now_add=True)
     description = models.TextField()
-    status = models.CharField(Status.choices, max_length=15)
-    priority = models.CharField(Priority.choices, max_length=15)
-    tag = models.CharField(Tag.choices, max_length=15)
+    status = models.CharField(choices=Status.choices, max_length=15)
+    priority = models.CharField(choices=Priority.choices, max_length=15)
+    tag = models.CharField(choices=Tag.choices, max_length=15)
     project = models.ForeignKey(Project,
-                                null=True,
-                                on_delete=models.CASCADE,
-                                blank=True)
+                                on_delete=models.CASCADE)
     author = models.ForeignKey(settings.AUTH_USER_MODEL,
                                on_delete=models.DO_NOTHING,
                                related_name='issue_author', null=True)
