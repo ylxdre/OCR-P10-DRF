@@ -86,9 +86,10 @@ class IssueSerializer(ModelSerializer):
 
 class CommentListSerializer(ModelSerializer):
 
+    issue = IssueSerializer(many=False)
     class Meta:
         model = Comment
-        fields = ['title', 'date_created', 'author']
+        fields = ['title', 'date_created', 'author', 'issue']
 
 class CommentDetailSerializer(ModelSerializer):
 

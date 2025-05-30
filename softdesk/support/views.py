@@ -15,6 +15,7 @@ from rest_framework.permissions import (IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from support.permissions import IsAuthor, IsContributor
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 
 
 class ProjectViewSet(ModelViewSet):
@@ -65,10 +66,12 @@ class IssueViewSet(ModelViewSet):
 
 
     def get_queryset(self):
-        project_id = int(self.request.GET.get('project'))
-        project = Project.objects.get(id=project_id)
-        self.check_object_permissions(self.request, project)
-        return Issue.objects.filter(project=project_id)
+        #check for the right query string or return nothing
+        if self.request.GET.get('project'):
+            project_id = int(self.request.GET.get('project'))
+            project = Project.objects.get(id=project_id)
+            self.check_object_permissions(self.request, project)
+            return Issue.objects.filter(project=project_id)
 
 
     def get_contributors(self, project):
