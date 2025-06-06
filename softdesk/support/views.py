@@ -26,6 +26,27 @@ class ProjectViewSet(ModelViewSet):
     queryset = Project.objects.filter(active=True)
 
 
+    def get_queryset(self):
+        """
+        add a filter on contributor or author in querystring
+        """
+        if self.request.GET.get('contributor'):
+            requested_contributor = self.request.GET.get('contributor')
+            try:
+                user = User.objects.get(username=requested_contributor)
+                return Project.objects.filter(contributors=user)
+            except User.DoesNotExist:
+                return Response(f"{requested_contributor} doesn't exist",
+                                status=status.HTTP_404_NOT_FOUND)
+        if self.request.GET.get('author'):
+            requested_author = self.request.GET.get('author')
+            try:
+                user = User.objects.get(username=requested_author)
+                return Project.objects.filter(author=user)
+            except User.DoesNotExist:
+                return Response(f"{requested_author} doesn't exist",
+                                status=status.HTTP_404_NOT_FOUND)
+
     def retrieve(self, request, *args, **kwargs):
         """
         check if requestor is in the project's contributor
@@ -56,6 +77,16 @@ class ProjectViewSet(ModelViewSet):
         contributor_serializer = ContributorSerializer(data=data)
         if contributor_serializer.is_valid():
             contributor_serializer.save()
+
+    @action(detail=False, methods=['get'])
+    def test(self, request):
+        requested_user = self.request.GET.get('author')
+        try:
+            user = User.objects.get(username=requested_user)
+            return Response(UserListSerializer(user).data)
+        except:
+            return Response(f"{requested_user} isn't a valid user")
+
 
     @action(detail=True, methods=['patch'], permission_classes=[IsContributor])
     def contributor(self, request, pk):
