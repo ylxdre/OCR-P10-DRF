@@ -15,6 +15,13 @@ class UserSerializer(ModelSerializer):
                   'can_data_be_shared']
 
 
+class UserListSerializer(ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ['id', 'username']
+
+
 class UserUpdateSerializer(ModelSerializer):
 
     class Meta:

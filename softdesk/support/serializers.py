@@ -15,9 +15,12 @@ class ContributorSerializer(ModelSerializer):
 
 class ContributorListSerializer(ModelSerializer):
 
+    contributor = StringRelatedField(many=False)
+
     class Meta:
         model = ProjectContributor
         fields = ['contributor']
+
 
 
 
@@ -65,13 +68,9 @@ class IssueSerializer(ModelSerializer):
         model = Issue
         fields = ['id', 'title', 'project', 'date_created', 'priority',
                   'tag', 'status', 'author']
-        read_only_field = ['author']
 
 
-    def validate_author(self, data):
-        if Project.objects.filter(contributors=data.author).exists():
-            raise ValidationError("Requestor isn't contributor")
-        return data
+
 
     def validate_project(self, data):
     #    if data['user'] not in data['project'].contributors:
@@ -84,15 +83,34 @@ class IssueSerializer(ModelSerializer):
         return data
 
 
+class IssueDetailSerializer(ModelSerializer):
+
+    comments = SerializerMethodField()
+    author = StringRelatedField(many=False)
+
+
+    class Meta:
+        model = Issue
+        fields = ['title', 'project', 'date_created', 'priority',
+                  'tag', 'status', 'author', 'comments']
+
+    def get_comments(self, instance):
+        queryset = Comment.objects.filter(issue=instance.id)
+        serializer = CommentListSerializer(queryset, many=True)
+        return serializer.data
+
+
 class CommentListSerializer(ModelSerializer):
 
     issue = IssueSerializer(many=False)
+
     class Meta:
         model = Comment
         fields = ['title', 'date_created', 'author', 'issue']
+
 
 class CommentDetailSerializer(ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ['title', 'date_created', 'author', 'description']
+        fields = ['title', 'date_created', 'description', 'issue', 'author']

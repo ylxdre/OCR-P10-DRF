@@ -7,7 +7,7 @@ class AdminProject(admin.ModelAdmin):
 
     @admin.display(description='contributors')
     def contributors(self, obj):
-        return obj.contributor
+        return obj.contributors
 
 class AdminIssue(admin.ModelAdmin):
     list_display = ('id', 'title', 'author', 'project')
