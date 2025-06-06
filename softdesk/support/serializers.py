@@ -57,6 +57,12 @@ class ProjectDetailSerializer(ModelSerializer):
         return serializer.data
 
 
+class IssueListSerializer(ModelSerializer):
+
+    class Meta:
+        model = Issue
+        fields = ['id', 'title']
+
 class IssueSerializer(ModelSerializer):
     author = StringRelatedField(many=False)
 
@@ -84,15 +90,16 @@ class IssueDetailSerializer(ModelSerializer):
 
 
 class CommentListSerializer(ModelSerializer):
-
-    issue = IssueSerializer(many=False)
+    issue = IssueListSerializer(many=False)
+    author = StringRelatedField(many=False)
 
     class Meta:
         model = Comment
-        fields = ['title', 'date_created', 'author', 'issue']
+        fields = ['id', 'title', 'date_created', 'author', 'issue']
 
 
 class CommentDetailSerializer(ModelSerializer):
+    author = StringRelatedField(many=False)
 
     class Meta:
         model = Comment

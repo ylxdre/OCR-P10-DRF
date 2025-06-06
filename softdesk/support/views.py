@@ -7,6 +7,7 @@ from support.serializers import (ProjectSerializer,
                                  ContributorListSerializer,
                                  IssueSerializer,
                                  IssueDetailSerializer,
+                                 IssueListSerializer,
                                  CommentListSerializer,
                                  CommentDetailSerializer)
 from authentication.serializers import UserListSerializer
@@ -16,14 +17,13 @@ from rest_framework.permissions import (IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from support.permissions import IsAuthor, IsContributor
 from rest_framework.decorators import action
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 
 
 class ProjectViewSet(ModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
     serializer_class = ProjectSerializer
     detail_serializer_class = ProjectDetailSerializer
-    queryset = Project.objects.filter(active=True)
 
 
     def get_queryset(self):
@@ -35,17 +35,17 @@ class ProjectViewSet(ModelViewSet):
             try:
                 user = User.objects.get(username=requested_contributor)
                 return Project.objects.filter(contributors=user)
-            except User.DoesNotExist:
-                return Response(f"{requested_contributor} doesn't exist",
-                                status=status.HTTP_404_NOT_FOUND)
+            except:
+                return User.objects.filter(username=requested_contributor)
         if self.request.GET.get('author'):
             requested_author = self.request.GET.get('author')
             try:
                 user = User.objects.get(username=requested_author)
                 return Project.objects.filter(author=user)
-            except User.DoesNotExist:
-                return Response(f"{requested_author} doesn't exist",
-                                status=status.HTTP_404_NOT_FOUND)
+            except:
+                return User.objects.filter(username=requested_author)
+        return Project.objects.filter(active=True)
+
 
     def retrieve(self, request, *args, **kwargs):
         """
@@ -78,16 +78,6 @@ class ProjectViewSet(ModelViewSet):
         if contributor_serializer.is_valid():
             contributor_serializer.save()
 
-    @action(detail=False, methods=['get'])
-    def test(self, request):
-        requested_user = self.request.GET.get('author')
-        try:
-            user = User.objects.get(username=requested_user)
-            return Response(UserListSerializer(user).data)
-        except:
-            return Response(f"{requested_user} isn't a valid user")
-
-
     @action(detail=True, methods=['patch'], permission_classes=[IsContributor])
     def contributor(self, request, pk):
         """Add a contributor to a project
@@ -109,7 +99,8 @@ class ProjectViewSet(ModelViewSet):
             return Response(f"User {contributor} "
                             f"added to project {project}",
                             status=status.HTTP_202_ACCEPTED)
-        return Response("This user is already contributing",
+        response = {'message': 'This user is already contributing'}
+        return Response(response,
                         status=status.HTTP_226_IM_USED)
 
 
@@ -203,7 +194,6 @@ class CommentViewSet(ModelViewSet):
             return Comment.objects.filter(issue=issue_id)
         #or returns those from projects where requestor is contributing
         projects = Project.objects.filter(contributors=self.request.user).values('id')
-        print(projects)
         issues = Issue.objects.filter(project__in=projects)
         return Comment.objects.filter(issue__in=issues)
 
@@ -213,14 +203,13 @@ class CommentViewSet(ModelViewSet):
         return super().get_serializer_class()
 
     def create(self, request, *args, **kwargs):
-        user = request.user
+        user = User.objects.get(username=request.user)
         issue = Issue.objects.get(id=request.data['issue'])
         project = issue.project
         if issue.project.contributors.filter(username=request.user.username):
             serializer = CommentDetailSerializer(data=request.data)
             if serializer.is_valid(raise_exception=True):
-                #serializer.author = request.user.username
-                serializer.save(author=request.user.username)
+                serializer.save(author=user)
                 response = {"message": "comment created",
                             "data": serializer.data}
                 return Response(response, status=status.HTTP_201_CREATED)
