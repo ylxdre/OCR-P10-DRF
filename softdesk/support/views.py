@@ -33,25 +33,25 @@ class ProjectViewSet(ModelViewSet):
     queryset = Project.objects.filter(active=True)
 
 
-    def retrieve(self, request, pk, *args, **kwargs):
+    def retrieve(self, request, *args, **kwargs):
         """
         check if requestor is in the project's contributor
         Raises exception or returns project detail
         """
-        if not request.user in Project.objects.get(id=pk).contributors.all():
+        project = self.get_object()
+        if not request.user in project.contributors.all():
             raise PermissionDenied()
-        queryset = Project.objects.get(id=pk)
-        return Response(ProjectDetailSerializer(queryset).data)
+        return Response(ProjectDetailSerializer(project).data)
 
-    def partial_update(self, request, pk, *args, **kwargs):
+    def partial_update(self, request, *args, **kwargs):
         """
         check if requestor is author
         then save changes and returns project details
         """
-        if not request.user == Project.objects.get(id=pk).author:
+        project = self.get_object()
+        if not request.user == project.author:
             raise PermissionDenied()
-        queryset = Project.objects.get(id=pk)
-        serialized = ProjectDetailSerializer(queryset, data=request.data, partial=True)
+        serialized = ProjectDetailSerializer(project, data=request.data, partial=True)
         if serialized.is_valid(raise_exception=True):
             serialized.save()
             return Response(serialized.data)
@@ -66,11 +66,12 @@ class ProjectViewSet(ModelViewSet):
             contributor_serializer.save()
 
 
-    @action(detail=True, methods=['get'], permission_classes=[IsContributor])
+    @action(detail=True, methods=['patch'], permission_classes=[IsContributor])
     def test(self, request, pk):
         """only for testing purpose, should be deleted not published"""
         if not request.user in Project.objects.get(id=pk).contributors.all():
             raise PermissionDenied()
+        print(request.data)
         return Response("OK")
 
     @action(detail=True, methods=['patch'], permission_classes=[IsContributor])
@@ -129,10 +130,13 @@ class IssueViewSet(ModelViewSet):
 
 
     def perform_update(self, serializer):
-        if self.request.user == serializer.author:
-            return Response("OK")
+        issue = self.get_object()
+        if not self.request.user == issue.author:
+            raise PermissionDenied()
         if serializer.is_valid(raise_exception=True):
-            serializer.save(author=author)
+            requested_author = User.objects.get(
+                username=self.request.data['author'])
+            serializer.save(author=requested_author)
             return Response(serializer.data)
         return Response("Data error", status=status.HTTP_400_BAD_REQUEST)
 
@@ -153,7 +157,8 @@ class IssueViewSet(ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         if not 'project' in request.data:
-            return Response("Need project")
+            return Response("A project id is required",
+                            status=status.HTTP_400_BAD_REQUEST)
         project = Project.objects.get(id=request.data['project'])
         serializer = IssueSerializer(data=request.data)
         if self.request.user not in project.contributors.all():
