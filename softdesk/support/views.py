@@ -172,27 +172,6 @@ class IssueViewSet(ModelViewSet):
             }
             return Response(response, status = status.HTTP_201_CREATED)
 
-    #def perform_create(self, serializer):
-    #    """set authenticated user as author and contributor on creation"""
-    #    serializer.save(author=self.request.user)
-
-
-class ContributorViewSet(ModelViewSet):
-    permission_classes = [IsAuthenticatedOrReadOnly]
-
-    serializer_class = ContributorSerializer
-    queryset = ProjectContributor.objects.all()
-
-    def get_queryset(self):
-        if self.request.GET.get('project'):
-            serializer_class = ContributorListSerializer
-            return (ProjectContributor.objects.
-                    filter(project=self.request.GET.get('project')))
-        elif self.request.GET.get('user'):
-            user_id = User.objects.get(username=self.request.GET.get('user')).id
-            return (ProjectContributor.objects.
-                    filter(contributor=user_id))
-        return self.queryset
 
 
 class CommentViewSet(ModelViewSet):
