@@ -22,8 +22,6 @@ class ContributorListSerializer(ModelSerializer):
         fields = ['contributor']
 
 
-
-
 class ProjectSerializer(ModelSerializer):
 
     author = StringRelatedField(many=False)
@@ -60,27 +58,12 @@ class ProjectDetailSerializer(ModelSerializer):
 
 
 class IssueSerializer(ModelSerializer):
-
     author = StringRelatedField(many=False)
-
 
     class Meta:
         model = Issue
         fields = ['id', 'title', 'project', 'date_created', 'priority',
                   'tag', 'status', 'author']
-
-
-
-
-    def validate_project(self, data):
-    #    if data['user'] not in data['project'].contributors:
-    #        raise ValidationError("User must be a contributor to the project")
-        #print(data.project)
-        #if self.context['request'].user not in data.contributors:
-        #    raise ValidationError("User must be a contributor to the project")
-        #print(self.get_contributors(data))
-
-        return data
 
 
 class IssueDetailSerializer(ModelSerializer):
