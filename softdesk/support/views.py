@@ -4,10 +4,8 @@ from authentication.models import User
 from support.serializers import (ProjectSerializer,
                                  ProjectDetailSerializer,
                                  ContributorSerializer,
-                                 ContributorListSerializer,
                                  IssueSerializer,
                                  IssueDetailSerializer,
-                                 IssueListSerializer,
                                  CommentListSerializer,
                                  CommentDetailSerializer)
 from authentication.serializers import UserListSerializer
@@ -15,16 +13,15 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import (IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
-from support.permissions import IsAuthor, IsContributor
+from support.permissions import IsContributor
 from rest_framework.decorators import action
-from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
+from django.core.exceptions import PermissionDenied
 
 
 class ProjectViewSet(ModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
     serializer_class = ProjectSerializer
     detail_serializer_class = ProjectDetailSerializer
-
 
     def get_queryset(self):
         """
@@ -35,17 +32,16 @@ class ProjectViewSet(ModelViewSet):
             try:
                 user = User.objects.get(username=requested_contributor)
                 return Project.objects.filter(contributors=user)
-            except:
+            except User.DoesNotExist:
                 return User.objects.filter(username=requested_contributor)
         if self.request.GET.get('author'):
             requested_author = self.request.GET.get('author')
             try:
                 user = User.objects.get(username=requested_author)
                 return Project.objects.filter(author=user)
-            except:
+            except User.DoesNotExist:
                 return User.objects.filter(username=requested_author)
         return Project.objects.filter(active=True)
-
 
     def retrieve(self, request, *args, **kwargs):
         """
@@ -53,7 +49,7 @@ class ProjectViewSet(ModelViewSet):
         Raises exception or returns project detail
         """
         project = self.get_object()
-        if not request.user in project.contributors.all():
+        if request.user not in project.contributors.all():
             raise PermissionDenied()
         return Response(ProjectDetailSerializer(project).data)
 
@@ -65,7 +61,9 @@ class ProjectViewSet(ModelViewSet):
         project = self.get_object()
         if not request.user == project.author:
             raise PermissionDenied()
-        serialized = ProjectDetailSerializer(project, data=request.data, partial=True)
+        serialized = ProjectDetailSerializer(project,
+                                             data=request.data,
+                                             partial=True)
         if serialized.is_valid(raise_exception=True):
             serialized.save()
             return Response(serialized.data)
@@ -80,17 +78,18 @@ class ProjectViewSet(ModelViewSet):
 
     @action(detail=True, methods=['patch'], permission_classes=[IsContributor])
     def contributor(self, request, pk):
-        """Add a contributor to a project
+        """
+        Add a contributor to a project
         by creating a ProjectContributor's instance
         """
-        #check if requestor is contributor
-        if not request.user in Project.objects.get(id=pk).contributors.all():
+        # check if requestor is contributor
+        if request.user not in Project.objects.get(id=pk).contributors.all():
             raise PermissionDenied()
-        if request.data is None or not 'contributor' in request.data:
+        if request.data is None or 'contributor' not in request.data:
             response = {"detail": "Key error;`contributor` is expected"}
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
         requested_contributor = request.data['contributor']
-        #get the user's instance
+        # get the user's instance
         try:
             user = User.objects.get(username=requested_contributor)
             data = {'contributor': user.id, 'project': int(pk)}
@@ -98,12 +97,12 @@ class ProjectViewSet(ModelViewSet):
             project = Project.objects.get(id=pk)
             if serializer.is_valid():
                 serializer.save()
-                response = {"detail": f"User {user}" 
+                response = {"detail": f"User {user}"
                                       f"added to project ''{project}''"}
                 return Response(response, status=status.HTTP_202_ACCEPTED)
             response = {"detail": "This user is already contributing"}
             return Response(response, status=status.HTTP_226_IM_USED)
-        except:
+        except User.DoesNotExist:
             response = {"detail": "User doesn't exist"}
             return Response(response, status=status.HTTP_404_NOT_FOUND)
 
@@ -125,13 +124,13 @@ class IssueViewSet(ModelViewSet):
         """
         if self.request.GET.get('project'):
             project_id = int(self.request.GET.get('project'))
-            if not self.request.user in Project.objects.get(
+            if self.request.user not in Project.objects.get(
                     id=project_id).contributors.all():
                 raise PermissionDenied()
             return Issue.objects.filter(project=project_id)
         projects = Project.objects.filter(
             contributors=self.request.user).values('id')
-        #query on a list
+        # query on a list
         return Issue.objects.filter(project__in=projects)
 
     def perform_update(self, serializer):
@@ -167,7 +166,7 @@ class IssueViewSet(ModelViewSet):
             raise PermissionDenied()
 
     def create(self, request, *args, **kwargs):
-        if not 'project' in request.data:
+        if 'project' not in request.data:
             return Response("A project id is required",
                             status=status.HTTP_400_BAD_REQUEST)
         project = Project.objects.get(id=request.data['project'])
@@ -183,7 +182,7 @@ class IssueViewSet(ModelViewSet):
                 "detail": f"Issue {issue.id} created for project {project}",
                 "data": serializer.data
             }
-            return Response(response, status = status.HTTP_201_CREATED)
+            return Response(response, status=status.HTTP_201_CREATED)
 
 
 class CommentViewSet(ModelViewSet):
@@ -200,11 +199,12 @@ class CommentViewSet(ModelViewSet):
         if self.request.GET.get('issue'):
             issue_id = int(self.request.GET.get('issue'))
             project = Issue.objects.get(id=issue_id).project
-            if not self.request.user in project.contributors.all():
+            if self.request.user not in project.contributors.all():
                 raise PermissionDenied()
             return Comment.objects.filter(issue=issue_id)
-        #or returns those from projects where requestor is contributing
-        projects = Project.objects.filter(contributors=self.request.user).values('id')
+        # or returns those from projects where requestor is contributing
+        projects = Project.objects.filter(
+            contributors=self.request.user).values('id')
         issues = Issue.objects.filter(project__in=projects)
         return Comment.objects.filter(issue__in=issues)
 
@@ -226,4 +226,3 @@ class CommentViewSet(ModelViewSet):
                 return Response(response, status=status.HTTP_201_CREATED)
         response = {"detail": f"{user} isn't contributor for '{project}'"}
         return Response(response, status=status.HTTP_403_FORBIDDEN)
-

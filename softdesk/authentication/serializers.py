@@ -75,6 +75,3 @@ class PasswordUpdateSerializer(ModelSerializer):
     class Meta:
         model = User
         fields = ['old_password', 'new_password']
-
-
-

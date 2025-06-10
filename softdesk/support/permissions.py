@@ -1,6 +1,4 @@
 from rest_framework.permissions import BasePermission
-from support.models import Project, Issue, Comment
-
 
 class IsAuthor(BasePermission):
 
@@ -18,4 +16,3 @@ class IsContributor(BasePermission):
         return bool(request.user.is_authenticated
                     and request.user in object.contributors.all()
                     )
-

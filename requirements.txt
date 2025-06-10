@@ -4,8 +4,17 @@ charset-normalizer==3.4.2
 Django==5.2.1
 djangorestframework==3.16.0
 djangorestframework_simplejwt==5.5.0
+flake8==7.2.0
+flake8-html==0.4.3
 idna==3.10
+Jinja2==3.1.6
+MarkupSafe==3.0.2
+mccabe==0.7.0
+pycodestyle==2.13.0
+pyflakes==3.3.2
+Pygments==2.19.1
 PyJWT==2.9.0
 requests==2.32.3
 sqlparse==0.5.3
+typing_extensions==4.13.2
 urllib3==2.4.0

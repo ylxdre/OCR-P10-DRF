@@ -1,14 +1,9 @@
 from django.contrib.auth import update_session_auth_hash
-from django.shortcuts import render
-from django.utils.autoreload import raise_last_exception
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import PermissionDenied
-
-from authentication.models import User
 from authentication.serializers import (UserSerializer,
                                         UserUpdateSerializer,
                                         UserRegisterSerializer,
@@ -45,7 +40,7 @@ class PasswordUpdateView(APIView):
         serializer = PasswordUpdateSerializer(data=request.data)
         if serializer.is_valid():
             if not user.check_password(serializer.data.get("old_password")):
-                return Response({"old_password":"Wrong password"},
+                return Response({"old_password": "Wrong password"},
                                 status=status.HTTP_400_BAD_REQUEST)
             user.set_password(serializer.data.get('new_password'))
             user.save()
@@ -55,6 +50,7 @@ class PasswordUpdateView(APIView):
             }
             return Response(response, status=status.HTTP_204_NO_CONTENT)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class UserView(APIView):
     permission_classes = [IsAuthenticated]
@@ -86,4 +82,3 @@ class UserView(APIView):
             raise PermissionDenied()
         response = {"detail": "Username to delete must be given in data"}
         return Response(response, status=status.HTTP_400_BAD_REQUEST)
-

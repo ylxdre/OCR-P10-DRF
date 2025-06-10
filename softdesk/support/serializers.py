@@ -28,14 +28,21 @@ class ProjectSerializer(ModelSerializer):
     contributors = SlugRelatedField(many=True,
                                     read_only='True',
                                     slug_field='username')
+
     class Meta:
         model = Project
-        fields = ['id', 'author', 'contributors', 'title', 'type', 'date_created']
+        fields = ['id',
+                  'author',
+                  'contributors',
+                  'title',
+                  'type',
+                  'date_created']
 
     def validate_title(self, value):
         if Project.objects.filter(title=value).exists():
             raise ValidationError("Project already exists.")
         return value
+
 
 class ProjectDetailSerializer(ModelSerializer):
 
@@ -63,6 +70,7 @@ class IssueListSerializer(ModelSerializer):
         model = Issue
         fields = ['id', 'title']
 
+
 class IssueSerializer(ModelSerializer):
     author = StringRelatedField(many=False)
 
@@ -73,10 +81,8 @@ class IssueSerializer(ModelSerializer):
 
 
 class IssueDetailSerializer(ModelSerializer):
-
     comments = SerializerMethodField()
     author = StringRelatedField(many=False)
-
 
     class Meta:
         model = Issue
