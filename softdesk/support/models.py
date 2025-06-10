@@ -17,7 +17,7 @@ class Project(models.Model):
     active = models.BooleanField(default=True)
     description = models.CharField(max_length=4000)
     author = models.ForeignKey(settings.AUTH_USER_MODEL,
-                               on_delete=models.DO_NOTHING,
+                               on_delete=models.SET_NULL,
                                related_name='project_author', null=True)
     
     contributors = models.ManyToManyField(settings.AUTH_USER_MODEL,
@@ -29,7 +29,7 @@ class Project(models.Model):
 
 class ProjectContributor(models.Model):
     contributor = models.ForeignKey(settings.AUTH_USER_MODEL,
-                                    on_delete=models.DO_NOTHING)
+                                    on_delete=models.CASCADE)
     active = models.BooleanField(default=True)
     project = models.ForeignKey('Project',
                                 on_delete=models.CASCADE,
@@ -76,7 +76,7 @@ class Issue(models.Model):
                                 on_delete=models.CASCADE)
     author = models.ForeignKey(settings.AUTH_USER_MODEL,
                                on_delete=models.DO_NOTHING,
-                               related_name='issue_author', null=True)
+                               related_name='issue_author', blank=True, null=True)
 
 
 class Comment(models.Model):
