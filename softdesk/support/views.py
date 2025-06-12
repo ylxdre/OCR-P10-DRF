@@ -139,10 +139,8 @@ class IssueViewSet(ModelViewSet):
         change the author to assign issue
         """
         issue = self.get_object()
-        requested_author = ""
         if self.request.user != issue.author:
             raise PermissionDenied()
-        #if serializer.is_valid(raise_exception=True):
         serializer = IssueSerializer(issue,
                                      data=request.data,
                                      partial=True)
