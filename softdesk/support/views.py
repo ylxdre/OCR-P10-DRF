@@ -237,3 +237,18 @@ class CommentViewSet(ModelViewSet):
                 return Response(response, status=status.HTTP_201_CREATED)
         response = {"detail": f"{user} isn't contributor for '{project}'"}
         return Response(response, status=status.HTTP_403_FORBIDDEN)
+
+    def partial_update(self, request, *args, **kwargs):
+        """
+        check if requestor is author
+        then save changes and returns project details
+        """
+        comment = self.get_object()
+        if request.user != comment.author:
+            raise PermissionDenied()
+        serialized = CommentDetailSerializer(comment,
+                                             data=request.data,
+                                             partial=True)
+        if serialized.is_valid(raise_exception=True):
+            serialized.save()
+            return Response(serialized.data)
