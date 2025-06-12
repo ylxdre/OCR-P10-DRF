@@ -59,7 +59,7 @@ class ProjectViewSet(ModelViewSet):
         then save changes and returns project details
         """
         project = self.get_object()
-        if not request.user == project.author:
+        if request.user != project.author:
             raise PermissionDenied()
         serialized = ProjectDetailSerializer(project,
                                              data=request.data,
@@ -97,8 +97,8 @@ class ProjectViewSet(ModelViewSet):
             project = Project.objects.get(id=pk)
             if serializer.is_valid():
                 serializer.save()
-                response = {"detail": f"User {user}"
-                                      f"added to project ''{project}''"}
+                response = {"detail": f"User {user} "
+                                      f"added to project '{project}'"}
                 return Response(response, status=status.HTTP_202_ACCEPTED)
             response = {"detail": "This user is already contributing"}
             return Response(response, status=status.HTTP_226_IM_USED)
@@ -108,7 +108,7 @@ class ProjectViewSet(ModelViewSet):
 
 
 class IssueViewSet(ModelViewSet):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedOrReadOnly]
     serializer_class = IssueSerializer
     detail_serializer_class = IssueDetailSerializer
 
@@ -133,20 +133,31 @@ class IssueViewSet(ModelViewSet):
         # query on a list
         return Issue.objects.filter(project__in=projects)
 
-    def perform_update(self, serializer):
+    def partial_update(self, request, *args, **kwargs):
         """
         Check if requestor is author allows him to partial update
         change the author to assign issue
         """
         issue = self.get_object()
-        if not self.request.user == issue.author:
+        requested_author = ""
+        if self.request.user != issue.author:
             raise PermissionDenied()
-        if serializer.is_valid(raise_exception=True):
-            if self.request.data['author']:
-                requested_author = User.objects.get(
-                    username=self.request.data['author'])
-                serializer.save(author=requested_author)
-                return Response(serializer.data)
+        #if serializer.is_valid(raise_exception=True):
+        serializer = IssueSerializer(issue,
+                                     data=request.data,
+                                     partial=True)
+        if serializer.is_valid():
+            if 'author' in request.data:
+                try:
+                    author = User.objects.get(username=request.data['author'])
+                    serializer.save(author=author)
+                except User.DoesNotExist:
+                    response = {
+                        "detail": "Requested author isn't a valid user"}
+                    return Response(response, status=status.HTTP_404_NOT_FOUND)
+            serializer.save()
+            return Response(serializer.data)
+
         response = {"detail": "Data error"}
         return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
